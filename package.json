@@ -1,0 +1,16 @@
+{
+  "name": "job-bot",
+  "version": "1.0.0",
+  "description": "Telegram Job Board Bot — вакансии, анкеты, HR-панель",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js",
+    "dev": "nodemon bot.js"
+  },
+  "dependencies": {
+    "node-telegram-bot-api": "^0.66.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0"
+  }
+}
