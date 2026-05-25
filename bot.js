@@ -58,7 +58,8 @@ const mainMenu = {
   reply_markup: {
     keyboard: [
       ['📋 Открытые вакансии'],
-      ['📄 Отправить резюме / Откликнуться'],
+      ['📄 Заполнить анкету'],
+      ['📎 Отправить резюме файлом'],
     ],
     resize_keyboard: true,
   }
@@ -115,9 +116,17 @@ bot.onText(/📋 Открытые вакансии/, (msg) => {
 // ════════════════════════════════════════════════════════════
 //  3. ОТПРАВИТЬ РЕЗЮМЕ — запуск анкеты напрямую
 // ════════════════════════════════════════════════════════════
-bot.onText(/📄 Отправить резюме/, (msg) => {
+bot.onText(/📄 Заполнить анкету/, (msg) => {
   sessions[msg.chat.id] = { type: 'resume', step: 0, answers: {}, vacancyId: null, vacancyTitle: 'Общее резюме' };
   bot.sendMessage(msg.chat.id, QUESTIONS[0].text, { parse_mode: 'Markdown' });
+});
+
+// Подсказка для отправки файла
+bot.onText(/📎 Отправить резюме файлом/, (msg) => {
+  bot.sendMessage(msg.chat.id,
+    '📎 Отправь свой файл резюме прямо сюда в чат.\n\n✅ Принимаем: PDF, DOC, DOCX\n📏 Максимальный размер: 20 МБ\n\nПросто прикрепи файл и отправь — мы его получим!',
+    { parse_mode: 'Markdown' }
+  );
 });
 
 
@@ -358,16 +367,22 @@ bot.on('callback_query', (query) => {
 // ════════════════════════════════════════════════════════════
 bot.on('document', (msg) => {
   const chatId = msg.chat.id;
+  const fileName = msg.document.file_name || 'резюме';
   const resume = {
     from:         msg.from.username || msg.from.first_name,
     vacancyTitle: 'Файл-резюме',
-    answers:      { contact: `@${msg.from.username || msg.from.id}` },
-    file_name:    msg.document.file_name,
+    answers:      { contact: msg.from.username ? `@${msg.from.username}` : `id: ${msg.from.id}` },
+    file_name:    fileName,
     date:         new Date().toLocaleString('ru'),
   };
   resumes.push(resume);
-  bot.sendMessage(chatId, '✅ Резюме-файл получен! Мы свяжемся с тобой в ближайшее время.', mainMenu);
-  notifyHR(`📎 Новый файл-резюме от @${resume.from}: *${resume.file_name}*`);
+
+  bot.sendMessage(chatId,
+    `✅ Резюме *${fileName}* получено!\n\nМы рассмотрим его и свяжемся с тобой в ближайшее время. 🙌`,
+    { parse_mode: 'Markdown', ...mainMenu }
+  );
+
+  notifyHR(`📎 *Новое резюме-файл!*\n👤 От: ${msg.from.username ? '@' + msg.from.username : msg.from.first_name}\n📄 Файл: ${fileName}\n📅 ${resume.date}`);
   HR_ADMINS.forEach(id => bot.forwardMessage(id, chatId, msg.message_id));
 });
 
